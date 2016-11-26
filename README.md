@@ -6,4 +6,4 @@ In this repository, we provide two files:
 
 BDTT_functions.R, which contains functions that are needed to run BDTT
 BDTT_Example_scripts.R, which contains descriptions of how BDTT works, along with illustrative examples.
-If you have any questions, please contact either Florent Mazel (flo.mazel@gmail.com) or myself (mgroussi@gmail.com)
+If you have any questions, please contact either Mathieu Groussin (mgroussi@gmail.com) or myself(flo.mazel@gmail.com)
