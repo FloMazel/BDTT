@@ -6,10 +6,6 @@ output:  html_document
 
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = T)
-```
-  
 
 **In this script, we provide:**
   
