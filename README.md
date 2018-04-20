@@ -5,5 +5,5 @@ This repository contains R codes that can be used to run BDTT on a community eco
 In this repository, we provide two files:
 
 BDTT_functions.R, which contains functions that are needed to run BDTT
-BDTT_Example_scripts.R, which contains descriptions of how BDTT works, along with illustrative examples.
+BDTT_Example_scripts.R, which contains descriptions of how BDTT works, along with illustrative examples..
 If you have any questions, please contact either Mathieu Groussin (mgroussi@gmail.com) or myself(flo.mazel@gmail.com)
