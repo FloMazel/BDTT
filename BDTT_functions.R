@@ -1,83 +1,53 @@
+# BDTT for non-ultrametric trees
+#library(phytools)
+#library(betapart)
+#library(abind)
+#library(Matrix)
 
-# Function to get Info on Edges
-#---------------------------------
-getTreeInfo=function(tr2)
+#The first function is copied from phytools
+getDescendants=function (tree, node, curr = NULL) 
 {
-  NH=node.depth.edgelength(tr2)
-  treeH=max(NH)
-  edgeInfo=cbind(tr2$edge,treeH-NH[tr2$edge[,1]],treeH-NH[tr2$edge[,2]])
-  row.names(edgeInfo)=as.character(1:dim(edgeInfo)[1])
-  return(edgeInfo)
+  #if (!inherits(tree, "phylo")) 
+   # stop("tree should be an object of class \\"phylo\\".")
+  if (is.null(curr)) 
+    curr <- vector()
+  daughters <- tree$edge[which(tree$edge[, 1] == node), 2]
+  curr <- c(curr, daughters)
+  if (length(curr) == 0 && node <= length(tree$tip.label)) 
+    curr <- node
+  w <- which(daughters > length(tree$tip.label))
+  if (length(w) > 0) 
+    for (i in 1:length(w)) curr <- getDescendants(tree, daughters[w[i]], 
+                                                  curr)
+  return(curr)
 }
 
-# Function to get all branches and their descendant node at a given slice
-#------------------------------------------------------------------------
-GetBranchNode=function(slice,edgeInfo) {
-  a=(edgeInfo[,3]>=slice)*(edgeInfo[,4]<=slice)
-  return(edgeInfo[a==1,])
-}
-
-# Functions to fill the branch*sites matrices 
-# (sites can be environmental sites or hosts for microbial communities)
-#----------------------------------------------------------------------
-vectorPres=function(node,tree)
-{
-  pres=rep(0,length(tree$tip.label))
-  names(pres)=tree$tip.label
-  pres[clade.members(node,tree,tip.label=T)]=1 
-  return(pres)
-}
-
-vectorPresBigMat=function(nodes,tree,mat)
-{
-  for (i in nodes)
-  {
-    #print(100*match(i,nodes)/length(nodes))
-    dd=clade.members(i,tree,tip.label=T)
-    mat[as.character(i),dd]=1 
-  }  
+BDTT=function(similarity_slices,tree,sampleOTUs,onlyBeta=T,metric="jac"){
   
-  return(mat)
+  Betas=lapply(similarity_slices,getBDTT,tree=tree,sampleOTUs=sampleOTUs,onlyBeta=T,metric=metric)
+  names(Betas)=similarity_slices
+  res=do.call(function(...){abind(...,along=0)},Betas)
+  return(res)
+  }
+
+
+getBDTT=function(similarity,tree,sampleOTUs,onlyBeta=T,metric="jac")
+{
+  New_OTUs_sample_matrix=getNew_OTUs_sample_matrix(similarity=similarity,sampleOTUs=sampleOTUs,tree=tree)
+  BetasPA=getBeta(t(New_OTUs_sample_matrix[[1]]),ab=F)[c("jtu","jac"),,]
+  #rownames(BetasPA)=paste(rownames(BetasPA),"_Simi_",similarity,sep="")
+  BetasAb=getBeta(t(New_OTUs_sample_matrix[[1]]),ab=T)[c("bctu","bc"),,]  
+  #rownames(BetasAb)=paste(rownames(BetasAb),"_Simi_",similarity,sep="")
+  AllBetas=abind(BetasPA,BetasAb,along = 1)
+  
+  AllBetas=AllBetas[metric,,]
+  
+  if (onlyBeta==T){res=list(Beta_Div=AllBetas,NewOTU_table=New_OTUs_sample_matrix[[1]],New_to_old_OTUs=New_OTUs_sample_matrix[[2]])}
+  if (onlyBeta==T){res=AllBetas}
+  
+  return(res)
 }
 
-# Function 'GetBranchOcc': computes a Branch*Sites matrix and directly save it in a file (not in Renv)
-# Branch*sites matrices are also frequently named 'OTU tables' in the field of microbiology
-#--------------------------------------------------------------------------------------------------------
-
-#   slice: the age of the desired slice
-#   tree: the community phylogenetic tree (must be ultrametric)
-#   sitesp: the site * species matrice. Species names must match the tip names in the phylogenetic tree
-#            In microbiology, sitesp is equivalent to the OTU table determining the distribution of unique 16S sequences across samples (100% similarity OTUs) 
-#   pathtoSaveBranchOcc: directory where Branch*sites matrices are stored
-#   bigmatrix=F: if site*species is a VERY big matrix, it is highly recommended to set bigmatrix=T (use of the bigmemory package)
-
-GetBranchOcc=function(slice,tree,sitesp,pathtoSaveBranchOcc,bigmatrix=F)
-{
-  edgeInfo=getTreeInfo(tree)
-  
-  if (slice==0)
-  {OTUmat=sitesp}
-  else 
-  {
-    brCorres=GetBranchNode(slice=slice,edgeInfo=edgeInfo)
-    NodeDes=brCorres[,2]    
-    #print("getting OTUS host matrix")
-    OTUnames=as.character(brCorres[,2])
-    if (bigmatrix==F) {branchPAtotal=matrix(0,ncol=length(tree$tip.label),nrow=length(NodeDes),dimnames=list(OTUnames,tree$tip.label))}
-    else if (bigmatrix==T) {branchPAtotal=filebacked.big.matrix(ncol=length(tree$tip.label),nrow=length(NodeDes),dimnames=list(OTUnames,tree$tip.label),backingfile = paste("branchPAtotal",slice,sep=""),backingpath =paste(pathtoSaveBranchOcc), descriptorfile = paste("branchPAtotalsauv",slice,sep=""))}   
-      
-      mat1=vectorPresBigMat(node=NodeDes,tree=tree,mat=branchPAtotal)
-      mat1=mat1[,colnames(sitesp)]
-      mat2=as.matrix(mat1)
-      mat2=t(mat2)
-      occM=as.matrix(sitesp)
-      OTUmat=(occM)%*%(mat2)
-  } 
-      save(OTUmat,file=paste(pathtoSaveBranchOcc,"Branch_Site_matrix_SliceNo",slice,".rdata",sep=""))
-}    
-
-# Function to compute raw Jaccard and Sorensen Beta diversities 
-#----------------------------------------------------------
 getBeta=function(mat,ab=F)
 {
   if (ab==T)
@@ -91,6 +61,7 @@ getBeta=function(mat,ab=F)
   }
   if (ab==F)
   {
+    mat[mat>0]=1
     h=beta.pair(data.frame(mat), index.family="jaccard")
     hh=beta.pair(data.frame(mat), index.family="sorensen")
     jtu=as.matrix(h[[1]])
@@ -105,76 +76,84 @@ getBeta=function(mat,ab=F)
   return(res)
 }
 
-# Function 'GetBetaDiv' to compute Beta-diversities from site*species matrices and to directly save the matrix of beta-diversities 
-#---------------------------------------------------------------------------------------------------------------------------------
 
-# INPUT VARIABLES
-#   slice: the age of the desired slice
-#   pathtoGetBranchOcc: the input file where the branch*sites matrix is saved (result of the function GetBranchOcc)
-#   pathtoSaveBeta: the output file where the matrices of beta diversities are saved (several beta-diversity metrics are used)
-#   bigmatrix=F: if you used bigmatrix=T to create the branch*sites matrix with 'GetBranchOcc' (OTU table), use bigmatrix=T again.
-
-# OUTPUT
-# save Beta diversity matrices as a 3D array in 'pathtoSaveBeta' 
-# Array = array of sites*sites*beta diversity metrics 
-
-#beta diversity metrics 
-
-#"jtu" : True Turnover component of Jaccard (Presence/Absence)
-#"jne" : Nestedness component of Jaccard (Presence/Absence)
-#"jac" : Jaccard (Presence/Absence)
-#"stu" : True Turnover component of Sorensen (Presence/Absence)
-#"sne" : Nestedness component of Sorensen (Presence/Absence)
-#"sor" : Sorensen (Presence/Absence)
-#"bctu" : True Turnover component of Bray-Curtis (Abundance version of Sorensen)
-#"bcne" : Nestedness component of Bray-Curtis (Abundance version of Sorensen)
-#"bc" : Bray-Curtis (Abundance version of Sorensen)
-
-GetBetaDiv=function(slice,pathtoGetBranchOcc,pathtoSaveBeta)
+getNew_OTUs_sample_matrix=function(similarity,sampleOTUs,tree)
 {
-  load(paste(pathtoGetBranchOcc,"Branch_Site_matrix_SliceNo",slice,".rdata",sep=""))
-  OTUmatPA=OTUmat
-  OTUmatPA[OTUmatPA>0]=1
-  Be1=getBeta(OTUmatPA,ab=F)  
-  Be=getBeta(OTUmat,ab=T)
-  Betaa=abind(Be1,Be,along=1)
-  save(Betaa,file=paste(pathtoSaveBeta,"BetaDiv_BetaDivSliceNo",slice,".rdata",sep=""))
-}   
-
-
-# FUNCTION 'GetCorrelations': computes correlations between beta-diversities and environmental distances at the desired slice
-#----------------------------------------------------------------------------------------------------------------------------
-
-# INPUT VARIABLES
-#   slice: the age of the desired slice
-#   indice: the betadiv metric you want:
-#		"jtu": True Turnover component of Jaccard (Presence/Absence)
-#		"jne": Nestedness component of Jaccard (Presence/Absence)
-#		"jac": Jaccard (Presence/Absence)
-#		"stu": True Turnover component of Sorensen (Presence/Absence)
-#		"sne": Nestedness component of Sorensen (Presence/Absence)
-#		"sor": Sorensen (Presence/Absence)
-#		"bctu": True Turnover component of Bray-Curtis (Abundance version of Sorensen)
-#		"bcne": Nestedness component of Bray-Curtis (Abundance version of Sorensen)
-#		"bc": Bray-Curtis (Abundance version of Sorensen)
-#   pathtoGetBeta : the file where Beta-Diversity matrices were previously stored (output of the 'GetBetaDiv' function)
-#   EnvDist: matrix of environmental distances. (e.g. geographic or climatic distances between sites, dietary or phylogenetic distances between hosts, etc).
-#   TypeofMantel: type of correlation used to run the Mantel test (either "Spearman" or "Pearson")
-#   nperm: number of permutations to perform to compute a p-value
-
-# OUTPUT
-# A 2*n matrix with R2 coefficients and their associated p-values
-
-
-GetCorrelations=function(slice,indice="sor",pathtoGetBeta="",EnvDist,TypeofMantel="Spearman",nperm=1000)
-{
-  load(file=paste(pathtoGetBeta,"BetaDiv_BetaDivSliceNo",slice,".rdata",sep=""))
-  #get same sites
-  site=intersect(dimnames(Betaa)[[2]],colnames(EnvDist))
-  Betaa=Betaa[indice,site,site]
-  EnvDist=EnvDist[site,site]
-  if (TypeofMantel=="Spearman") {  multiMant_SE=MRM(as.dist(Betaa)~as.dist(EnvDist),nperm = nperm,mrank=T)}
-  if (TypeofMantel=="Pearson") {  multiMant_SE=MRM(as.dist(Betaa)~as.dist(EnvDist),nperm = nperm)}
-  return(multiMant_SE$r.squared)
+  CorresMatrix=New_toOld_OTUs(similarity=similarity,tree=tree)
+  sample=Matrix(t(sampleOTUs))
+  sp=colnames(sample)
+  Newsample=t(sample[,sp] %*% CorresMatrix[sp,])
+  out=list(NewSample=as.matrix(Newsample),CorrepondanceOTUs=as.matrix(CorresMatrix))
+  return(out)
 }
+
+getHnode=function(node,tree)
+{ 
+  tips=1:length(tree$tip.label)
+  NH=node.depth.edgelength(tree)
+  DescNodes=getDescendants(node=node,tree=tree)
+  DescTips=DescNodes[DescNodes%in%tips]
+  Hnode=max(NH[DescTips]-NH[node])
+  return(Hnode)
+}
+
+getHnodes=function(tree)
+{
+  allnodes=sort(unique(c(tree$edge)))
+  names(allnodes)=as.character(allnodes)
+  tips=1:length(tree$tip.label)
+  nodes=allnodes[!allnodes%in%tips]
+  
+  Hnodes=sapply(nodes,getHnode,tree=tree)
+  return(Hnodes)
+}
+
+multigetDescendants=function(node,tree){
+  alltips=1:length(tree$tip.label)
+  nodes=getDescendants(tree=tree,node=node)
+  tips=nodes[nodes%in%alltips]
+  return(tree$tip.label[tips])
+}
+
+New_toOld_OTUs=function(similarity,tree)
+{
+  Ntips=length(tree$tip.label)
+  tips=1:Ntips
+  NameTips=tree$tip.label
+  Hnodes=getHnodes(tree) #get Nodes height 
+  Hbranches=cbind(Hnodes[as.character(tree$edge[,1])],Hnodes[as.character(tree$edge[,2])]) #put them in a matrix of edges
+  NodeToCluster=tree$edge[(Hbranches[,1]>similarity)&(Hbranches[,2]<similarity),2] #select the branches whom descandant node to be collapsed
+  NodeToCluster=NodeToCluster[!is.na(NodeToCluster)] #remove tips
+  
+  DescendandTips=lapply(NodeToCluster,multigetDescendants,tree=tree) #get descendant tips
+  names(DescendandTips)=as.character(NodeToCluster)
+  
+  #Lenght of the different categories of OTUs
+  N_newOTUS=length(DescendandTips)
+  N_collapsedOldOtus= sum(do.call(rbind, lapply(DescendandTips, function(x) length(x))))
+  N_totalNewOTUS=Ntips-N_collapsedOldOtus+N_newOTUS
+  
+  print(paste(similarity," similarity provides ",N_totalNewOTUS," total new OTUs",sep=""))
+  
+  NewOTUs_OldOTUs_Matrix=NA
+  if (N_totalNewOTUS>2) 
+  {
+    #Names of the different categories of OTUs
+    collapsedOldOtus= unlist(DescendandTips)
+    UncollapsedOTUs=NameTips[!NameTips%in%collapsedOldOtus]
+    
+    #Creating and filling New to Old matrix correpondance
+    NewOTUSNames=c(UncollapsedOTUs,as.character(NodeToCluster))
+    NewOTUs_OldOTUs_Matrix=Matrix(0,ncol=N_totalNewOTUS,nrow=Ntips,dimnames = list(tree$tip.label,NewOTUSNames))
+    NewOTUs_OldOTUs_Matrix=Matrix(0,ncol=N_totalNewOTUS,nrow=Ntips,dimnames = list(tree$tip.label,NewOTUSNames))
+    
+    for (i in UncollapsedOTUs){NewOTUs_OldOTUs_Matrix[i,i]=1} # uncollapsed OTUS
+    for (i in as.character(NodeToCluster)){NewOTUs_OldOTUs_Matrix[DescendandTips[[i]],i]=1} #collapsed OTUS
+  } else{print("Only 2 OTUS (or less) present at this resolution -- are you sure this is meaningfull?")} 
+  
+  
+  return(NewOTUs_OldOTUs_Matrix)
+}
+
+
 
