@@ -1,8 +1,13 @@
-# BDTT for non-ultrametric trees
-#library(phytools)
-#library(betapart)
-#library(abind)
-#library(Matrix)
+
+BDTT=function(similarity_slices,tree,sampleOTUs,onlyBeta=T,metric=c("jac","bc"){
+  
+  Betas=lapply(similarity_slices,getBDTT,tree=tree,sampleOTUs=sampleOTUs,onlyBeta=T,metric=metric)
+  names(Betas)=similarity_slices
+  res=do.call(function(...){abind(...,along=0)},Betas)
+  return(res)
+}
+
+
 
 #The first function is copied from phytools
 getDescendants=function (tree, node, curr = NULL) 
@@ -22,13 +27,7 @@ getDescendants=function (tree, node, curr = NULL)
   return(curr)
 }
 
-BDTT=function(similarity_slices,tree,sampleOTUs,onlyBeta=T,metric="jac"){
-  
-  Betas=lapply(similarity_slices,getBDTT,tree=tree,sampleOTUs=sampleOTUs,onlyBeta=T,metric=metric)
-  names(Betas)=similarity_slices
-  res=do.call(function(...){abind(...,along=0)},Betas)
-  return(res)
-  }
+
 
 
 getBDTT=function(similarity,tree,sampleOTUs,onlyBeta=T,metric="jac")
@@ -42,7 +41,7 @@ getBDTT=function(similarity,tree,sampleOTUs,onlyBeta=T,metric="jac")
   
   AllBetas=AllBetas[metric,,]
   
-  if (onlyBeta==T){res=list(Beta_Div=AllBetas,NewOTU_table=New_OTUs_sample_matrix[[1]],New_to_old_OTUs=New_OTUs_sample_matrix[[2]])}
+  if (onlyBeta==F){res=list(Beta_Div=AllBetas,NewOTU_table=New_OTUs_sample_matrix[[1]],New_to_old_OTUs=New_OTUs_sample_matrix[[2]])}
   if (onlyBeta==T){res=AllBetas}
   
   return(res)
@@ -93,7 +92,7 @@ getHnode=function(node,tree)
   NH=node.depth.edgelength(tree)
   DescNodes=getDescendants(node=node,tree=tree)
   DescTips=DescNodes[DescNodes%in%tips]
-  Hnode=max(NH[DescTips]-NH[node])
+  Hnode=max(NH[DescTips]-NH[node])# take the longest branches to define node height
   return(Hnode)
 }
 
