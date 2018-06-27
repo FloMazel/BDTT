@@ -31,23 +31,23 @@ library(Matrix)
 
 ## 2. The BDTT function <a name="Functions"></a>
 
-#####The BDTT function 
+##### The BDTT function 
 requires the follwing inputs: 
 
-######similarity_slices:
+###### similarity_slices:
 the slices (i.e. the multiple phylogenetic resolutions) at which you want to aggregate the tips of the phylogeny and compute corresponding beta-diversity. 0 corresponds to no aggregation, i.e use the raw tips of the phylogeny as microbial units. Values >0 will aggregate the tips of the phylogeny according to the given value to create aggregated microbial units and compute corresponding beta-diversity. Use the 'getHnodes' function to have an idea of the resolution slices you can explore (see below). 
 
-######tree: 
+###### tree: 
 the species (or OTUs, or sequence variants) phylogeny (the names of the tips must match those in the site*species matrix)
 
-######sampleOTUs:
+###### sampleOTUs:
 samples * species (or OTUs, or sequence variants) matrix
 
-######onlyBeta: 
+###### onlyBeta: 
 Putting "TRUE" (default) will make the function return beta-diversity dissimilary matrices only
 Putting "FALSE" will make the function return beta-diversity dissimilary matrices + matrix detailling the relationship between tips and the aggregated units. 
 
-######metric:
+###### metric:
 Beta-diversity metric chosen; defaut is Jaccard ("jac") and Bray-Curtis ("bc"). 
 
 Other possibilities include: 
@@ -62,12 +62,12 @@ Other possibilities include:
 
 "sor": Sorensen (Presence/Absence)
 
-#####The GetHnodes function 
+##### The GetHnodes function 
 cmpute the "height" of each ndoe in the phylogeny defined as the maximum evolutionnary distance between this node and its descendant tips. 
 
 The function requires the following input: 
 
-######tree: 
+###### tree: 
 the species (or OTUs, or sequence variants) phylogeny (the names of the tips must match those in the site*species matrix)
 
 
