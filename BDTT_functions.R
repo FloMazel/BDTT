@@ -1,7 +1,7 @@
 
-BDTT=function(similarity_slices,tree,sampleOTUs,onlyBeta=T,metric=c("jac","bc"){
+BDTT=function(similarity_slices,tree,sampleOTUs,onlyBeta=T,metric=c("jac","bc")){
   
-  Betas=lapply(similarity_slices,getBDTT,tree=tree,sampleOTUs=sampleOTUs,onlyBeta=T,metric=metric)
+  Betas=lapply(similarity_slices,getBDTT,tree=tree,sampleOTUs=sampleOTUs,onlyBeta=onlyBeta,metric=metric)
   names(Betas)=similarity_slices
   res=do.call(function(...){abind(...,along=0)},Betas)
   return(res)
@@ -121,7 +121,7 @@ New_toOld_OTUs=function(similarity,tree)
   NameTips=tree$tip.label
   Hnodes=getHnodes(tree) #get Nodes height 
   Hbranches=cbind(Hnodes[as.character(tree$edge[,1])],Hnodes[as.character(tree$edge[,2])]) #put them in a matrix of edges
-  NodeToCluster=tree$edge[(Hbranches[,1]>similarity)&(Hbranches[,2]<similarity),2] #select the branches whom descandant node to be collapsed
+  NodeToCluster=tree$edge[(Hbranches[,1]>similarity)&(Hbranches[,2]<=similarity),2] #select the branches whom descandant node to be collapsed
   NodeToCluster=NodeToCluster[!is.na(NodeToCluster)] #remove tips
   
   DescendandTips=lapply(NodeToCluster,multigetDescendants,tree=tree) #get descendant tips

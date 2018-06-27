@@ -1,0 +1,155 @@
+## Table of contents
+
+#### 1. [The Packages](#Packages)
+
+#### 2. [The BDTT function](#Functions)
+
+#### 3. [Example](#Example)
+
+#####3.1. Computing BDTT
+
+#####3.2. Testing the statistical link between BDTT and metadata
+
+
+
+## 1. The needed R packages <a name="Packages"></a>
+
+Before running the BDTT analysis, you will need to install and load the following R packages: 
+
+* ape
+* betapart 
+* matrix 
+* abind
+
+```{r, message=FALSE}
+library(ape)
+library(betapart)
+library(abind)
+library(Matrix)
+```
+
+
+## 2. The BDTT function <a name="Functions"></a>
+
+#####The BDTT function 
+requires the follwing inputs: 
+
+######similarity_slices:
+the slices (i.e. the multiple phylogenetic resolutions) at which you want to aggregate the tips of the phylogeny and compute corresponding beta-diversity. 0 corresponds to no aggregation, i.e use the raw tips of the phylogeny as microbial units. Values >0 will aggregate the tips of the phylogeny according to the given value to create aggregated microbial units and compute corresponding beta-diversity. Use the 'getHnodes' function to have an idea of the resolution slices you can explore (see below). 
+
+######tree: 
+the species (or OTUs, or sequence variants) phylogeny (the names of the tips must match those in the site*species matrix)
+
+######sampleOTUs:
+samples * species (or OTUs, or sequence variants) matrix
+
+######onlyBeta: 
+Putting "TRUE" (default) will make the function return beta-diversity dissimilary matrices only
+Putting "FALSE" will make the function return beta-diversity dissimilary matrices + matrix detailling the relationship between tips and the aggregated units. 
+
+######metric:
+Beta-diversity metric chosen; defaut is Jaccard ("jac") and Bray-Curtis ("bc"). 
+
+Other possibilities include: 
+
+"jtu": True Turnover component of Jaccard (Presence/Absence)
+
+"jne": Nestedness component of Jaccard (Presence/Absence)
+
+"stu": True Turnover component of Sorensen (Presence/Absence)
+
+"sne": Nestedness component of Sorensen (Presence/Absence)
+
+"sor": Sorensen (Presence/Absence)
+
+#####The GetHnodes function 
+cmpute the "height" of each ndoe in the phylogeny defined as the maximum evolutionnary distance between this node and its descendant tips. 
+
+The function requires the following input: 
+
+######tree: 
+the species (or OTUs, or sequence variants) phylogeny (the names of the tips must match those in the site*species matrix)
+
+
+## 2. Examples <a name="Example"></a>
+
+### Computing BDTT
+
+```{r, message=FALSE}
+library(picante)
+
+data(phylocom)
+TreeExample=phylocom$phylo
+plot(TreeExample)
+
+SiteSpExample=t(phylocom$sample)
+SiteSpExample
+
+source("BDTT_functions.R")
+
+hist(getHnodes(TreeExample))
+slices=c(0:3)
+Betas=BDTT(similarity_slices = slices,tree = TreeExample,sampleOTUs = (SiteSpExample))
+```
+
+
+### Linking BDTT with environement / metadata
+
+Create random metada catageory 
+
+```{r, message=FALSE}
+Meta=sample(x=c("Condition_1","Condition_2"),size=dim(SiteSpExample)[2],replace = T) 
+names(Meta)=colnames(SiteSpExample)
+Meta
+```
+
+Test statistically the link between metadata and BDTT using PERMANOVA
+
+Load vegan to be able to use adonius function
+
+```{r, message=FALSE}
+library(vegan)
+```
+
+Example of the test for a given resolution (0) and a given metric (Jaccard); make sure that samples are in the same order
+
+```{r, message=FALSE}
+samples=names(Meta)
+adonis(Betas["0","jac",samples,samples]~Meta[samples])
+```
+
+Construct table to store results in a ready-to-use format for ggplot
+
+
+```{r, message=FALSE}
+predictors="Conditions1_2"
+StatsRes=expand.grid(similarity_slices=as.character(slices),predictors=predictors,metric=c("Jac","bc"))
+StatsRes[["F.Model"]]=StatsRes[["R2"]]=StatsRes[["Pr(>F)"]]=NA
+head(StatsRes)
+```
+
+Run multiple PERMANOVA across phylogenetic resolution and store results in a table ready to use for ggplot
+
+```{r, message=FALSE}
+for (i in as.character(slices))
+{
+   res=unlist(adonis(formula =Betas[i,"jac",samples,samples]~Meta[samples])$aov.tab[1,c(6,5,4)])
+   StatsRes[(StatsRes$metric=="Jac")&(StatsRes$similarity_slices==i),4:6]=res
+   res=unlist(adonis(formula =Betas[i,"bc",samples,samples]~Meta[samples])$aov.tab[1,c(6,5,4)])
+   StatsRes[(StatsRes$metric=="bc")&(StatsRes$similarity_slices==i),4:6]=res
+}
+```
+
+We can then plot the profiles of R2 along the phylogenetic time scale:
+
+```{r, message=FALSE}
+library(ggplot2)
+ggplot(aes(y=R2,x=similarity_slices,colour=predictors,group=factor(predictors)),data=StatsRes)+geom_point()+geom_line()+facet_wrap(~metric)
+```
+
+or just the profile for the significant effects
+
+```{r, message=FALSE}
+ggplot(aes(y=R2,x=similarity_slices,colour=predictors,group=factor(predictors)),data=StatsRes[StatsRes$`Pr(>F)`<.05,])+geom_point()+geom_line()+facet_wrap(~metric)
+```
+
