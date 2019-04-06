@@ -17,13 +17,14 @@
 Before running the BDTT analysis, you will need to install and load the following R packages: 
 
 * ape
-* betapart 
+* castor
 * matrix 
 * abind
 
 ```{r, message=FALSE}
 library(ape)
-library(betapart)
+#library(betapart)
+library(castor)
 library(abind)
 library(Matrix)
 ```
@@ -48,28 +49,12 @@ Putting "TRUE" (default) will make the function return beta-diversity dissimilar
 Putting "FALSE" will make the function return beta-diversity dissimilary matrices + matrix detailling the relationship between tips and the aggregated units. 
 
 ###### metric:
-Beta-diversity metric chosen; defaut is Jaccard ("jac") and Bray-Curtis ("bc"). 
-
-Other possibilities include: 
-
-"jtu": True Turnover component of Jaccard (Presence/Absence)
-
-"jne": Nestedness component of Jaccard (Presence/Absence)
-
-"stu": True Turnover component of Sorensen (Presence/Absence)
-
-"sne": Nestedness component of Sorensen (Presence/Absence)
-
-"sor": Sorensen (Presence/Absence)
-
-##### The GetHnodes function 
-cmpute the "height" of each ndoe in the phylogeny defined as the maximum evolutionnary distance between this node and its descendant tips. 
+Beta-diversity metric chosen; we provide Jaccard ("Jac") its true turnover component ("Jac_TT") and Bray-Curtis ("Bray"). 
 
 The function requires the following input: 
 
 ###### tree: 
-the species (or OTUs, or sequence variants) phylogeny (the names of the tips must match those in the site*species matrix)
-
+the species (or OTUs, or sequence variants) phylogeny
 
 ## 2. Examples <a name="Example"></a>
 
@@ -87,7 +72,7 @@ SiteSpExample
 
 source("BDTT_functions.R")
 
-hist(getHnodes(TreeExample))
+hist(get_all_node_depths(TreeExample))
 slices=c(0:3)
 Betas=BDTT(similarity_slices = slices,tree = TreeExample,sampleOTUs = (SiteSpExample))
 ```
@@ -115,7 +100,7 @@ Example of the test for a given resolution (0) and a given metric (Jaccard); mak
 
 ```{r, message=FALSE}
 samples=names(Meta)
-adonis(Betas["0","jac",samples,samples]~Meta[samples])
+adonis(Betas["0","Jac",samples,samples]~Meta[samples])
 ```
 
 Construct table to store results in a ready-to-use format for ggplot
@@ -123,7 +108,7 @@ Construct table to store results in a ready-to-use format for ggplot
 
 ```{r, message=FALSE}
 predictors="Conditions1_2"
-StatsRes=expand.grid(similarity_slices=as.character(slices),predictors=predictors,metric=c("Jac","bc"))
+StatsRes=expand.grid(similarity_slices=as.character(slices),predictors=predictors,metric=c("Jac","Bray"))
 StatsRes[["F.Model"]]=StatsRes[["R2"]]=StatsRes[["Pr(>F)"]]=NA
 head(StatsRes)
 ```
@@ -133,10 +118,10 @@ Run multiple PERMANOVA across phylogenetic resolution and store results in a tab
 ```{r, message=FALSE}
 for (i in as.character(slices))
 {
-   res=unlist(adonis(formula =Betas[i,"jac",samples,samples]~Meta[samples])$aov.tab[1,c(6,5,4)])
+   res=unlist(adonis(formula =Betas[i,"Jac",samples,samples]~Meta[samples])$aov.tab[1,c(6,5,4)])
    StatsRes[(StatsRes$metric=="Jac")&(StatsRes$similarity_slices==i),4:6]=res
-   res=unlist(adonis(formula =Betas[i,"bc",samples,samples]~Meta[samples])$aov.tab[1,c(6,5,4)])
-   StatsRes[(StatsRes$metric=="bc")&(StatsRes$similarity_slices==i),4:6]=res
+   res=unlist(adonis(formula =Betas[i,"Bray",samples,samples]~Meta[samples])$aov.tab[1,c(6,5,4)])
+   StatsRes[(StatsRes$metric=="Bray")&(StatsRes$similarity_slices==i),4:6]=res
 }
 ```
 
