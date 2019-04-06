@@ -1,3 +1,8 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 ## Table of contents
 
 #### 1. [The Packages](#Packages)
@@ -23,7 +28,6 @@ Before running the BDTT analysis, you will need to install and load the followin
 
 ```{r, message=FALSE}
 library(ape)
-#library(betapart)
 library(castor)
 library(abind)
 library(Matrix)
@@ -132,9 +136,9 @@ library(ggplot2)
 ggplot(aes(y=R2,x=similarity_slices,colour=predictors,group=factor(predictors)),data=StatsRes)+geom_point()+geom_line()+facet_wrap(~metric)
 ```
 
-or just the profile for the significant effects
+or just the profile for the significant effects (not run cause nothing is significant)
 
 ```{r, message=FALSE}
-ggplot(aes(y=R2,x=similarity_slices,colour=predictors,group=factor(predictors)),data=StatsRes[StatsRes$`Pr(>F)`<.05,])+geom_point()+geom_line()+facet_wrap(~metric)
+#ggplot(aes(y=R2,x=similarity_slices,colour=predictors,group=factor(predictors)),data=StatsRes[StatsRes$`Pr(>F)`<.05,])+geom_point()+geom_line()+facet_wrap(~metric)
 ```
 
