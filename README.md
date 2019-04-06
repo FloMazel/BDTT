@@ -6,5 +6,5 @@ Groussin, M., Mazel, F., Sanders, J. G., Smillie, C. S., Lavergne, S., Thuiller,
 
 Mazel, F., Wüest, R. O., Lessard, J. P., Renaud, J., Ficetola, G. F., Lavergne, S., & Thuiller, W. (2017). Global patterns of β‐diversity along the phylogenetic time‐scale: The role of climate and plate tectonics. Global Ecology and Biogeography, 26(10), 1211-1221.
 
-It has been written by myself with inputs from M. Groussin and J. Roy. In this repository, we provide a file that contains [functions](https://github.com/FloMazel/BDTT/blob/master/BDTT_functions.R) needed to run BDTT  and [example and tutorials](https://github.com/FloMazel/BDTT/blob/master/Tutorial_Examples.html). If you have any questions, please contact either Mathieu Groussin (mgroussi@gmail.com) or myself (flo.mazel@gmail.com)
+It has been written by myself with inputs from M. Groussin and J. Roy. In this repository, we provide a file that contains [functions](https://github.com/FloMazel/BDTT/blob/master/BDTT_functions.R) needed to run BDTT  and [example and tutorials](https://github.com/FloMazel/BDTT/blob/master/Tutorial_Examples.pdf). If you have any questions, please contact either Mathieu Groussin (mgroussi@gmail.com) or myself (flo.mazel@gmail.com)
 
