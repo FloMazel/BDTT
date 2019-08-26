@@ -4,9 +4,11 @@ This repository contains R codes that can be used to run BDTT on a community eco
 
 The main function, "BDTT" has three main arguments: 
 
--- similarity_slices: a numerical vector giving the h heights at which the tree should be sliced
--- tree: a phylogeny in the "phylo" ape format, with tip name matching the names in the OTU matrix (the rownames of the sampleOTUs argument)
--- sampleOTUs: a matrix of n OTUS (row) by m samples (columns)
+-- *similarity_slices*: a numerical vector giving the h heights at which the tree should be sliced
+
+-- *tree*: a phylogeny in the "phylo" ape format, with tip name matching the names in the OTU matrix (the rownames of the sampleOTUs argument)
+
+-- *sampleOTUs*: a matrix of n OTUS (row) by m samples (columns)
 
 and returns an array of beta diversity values (h*b*m*m): m is the number of samples, h is the number of slices, and b is the number of beta-diversity metrics computed (3 so far: BrayCurtis, Jaccard and the true turnover component of Jaccard).   
 
