@@ -1,14 +1,14 @@
 # Beta-diversity through time (BDTT) 
 
-This repository contains R codes that can be used to run BDTT on a community ecology dataset. BDTT decomposes community dissimilarities by time-slicing the phylogenetic tree of all members (e.g. 16S rDNA reads) present in all communities. It allows the user to detect at which time or phylogenetic scale an environmental factor of interest shapes the most community compositions. It has recently been applied to analyse the composition of mammalian communites around the world and the composition of gut bacterial communities within mammalian guts
+This repository contains R codes that can be used to run BDTT on a community ecology dataset. BDTT decomposes community dissimilarities by time-slicing the phylogenetic tree of all members (e.g. 16S rDNA reads) present in all communities. It allows the user to detect at which time or phylogenetic scale an environmental factor of interest shapes the most community compositions. It has recently been applied to analyse the composition of mammalian communities around the world and the composition of gut bacterial communities within mammalian guts
 
 The main function, "BDTT" has three main arguments: 
 
 -- **similarity_slices**: a numerical vector giving the *h* heights at which the tree should be sliced
 
--- **tree**: a phylogeny in the *phylo* ape format, with tip name matching the names in the OTU matrix (the row names of the sampleOTUs argument)
+-- **tree**: a phylogeny in the *phylo* ape format, with tip labels matching the OTUS names in the OTU matrix (the row names of the sampleOTUs argument)
 
--- **sampleOTUs**: a matrix of *n* OTUS (row) by *m* samples (columns)
+-- **sampleOTUs**: a matrix of *n* OTUS (row) by *m* samples (columns). The row names of *sampleOTUs* should correspond to your unique OTU names and match the tip labels of the phylogeny. Column names should be sample names. 
 
 and returns an array of beta diversity values (h x b x m x m): *m* is the number of samples, *h* is the number of slices, and *b* is the number of beta-diversity metrics computed (3 so far: BrayCurtis, Jaccard and the true turnover component of Jaccard).   
 
