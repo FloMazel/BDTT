@@ -15,9 +15,13 @@ The main function, called *BDTT* has three main arguments:
 -- **sampleOTUs**: a matrix of *n* OTUS (row) by *m* samples (columns). The row names of *sampleOTUs* should correspond to your unique OTU names and match the tip labels of the phylogeny. 
 Column names should be sample names. 
 
+You can find more information on how to use the function in the [example and tutorials](https://github.com/FloMazel/BDTT/blob/master/Tutorial_Examples.pdf)
+
 ## Output of the BDTT function 
 
 The main function, called *BDTT*, returns an array of beta diversity values (h x b x m x m): *m* is the number of samples, *h* is the number of slices, and *b* is the number of beta-diversity metrics computed (3 so far: BrayCurtis, Jaccard and the true turnover component of Jaccard).   
+
+You can find more information on how to use the function in the [example and tutorials](https://github.com/FloMazel/BDTT/blob/master/Tutorial_Examples.pdf)
 
 ## References
 
